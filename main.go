@@ -1,7 +1,8 @@
 package main
 
 func main() {
-	tell("sup")
+	tell("AstroChessEngine active")
 
 	uci(input())
+	tell("quitting program")
 }

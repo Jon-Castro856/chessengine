@@ -4,7 +4,7 @@ func engine() (froEngine, toEngine chan string) {
 	froEngine = make(chan string)
 	toEngine = make(chan string)
 	go func() {
-		for cmd := range toEng {
+		for cmd := range toEngine {
 			switch cmd {
 			case "stop":
 			case "quit":
