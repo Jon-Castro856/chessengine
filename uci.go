@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -23,7 +24,7 @@ func uci(input chan string) { //this command accepts an input and executes funct
 	bm := ""  //the current best move
 	words := []string{}
 
-	for quit == false {
+	for !quit {
 		select {
 		case cmd = <-input:
 			tell("info string uci got ", cmd)
@@ -42,7 +43,7 @@ func uci(input chan string) { //this command accepts an input and executes funct
 		case "ucinewgame":
 			handleNewGame()
 		case "position":
-			handlePosition(words)
+			handlePosition(cmd)
 		case "debug":
 			handleDebug(words)
 		case "register":
@@ -88,25 +89,87 @@ func handleUCI() { //handle initial uci check from the engine
 
 	tell("uciok")
 }
+
+func handleNewGame() {
+	tell("nyi")
+}
+
 func handleIsReady() {
 	tell("readyok")
 }
+
+func handleRegister() {
+	tell("nyi")
+}
+
 func handleSetOption(option []string) {
 	tell("not implemeneted", strings.Join(option, " "))
 }
 
-func handlePosition(words []string) {
+func handlePosition(cmd string) {
 	// position [fen <fenstring> | startpos ] moves <move1> .... <movei>
-	if len(words) > 1 {
-		words[1] = trim(low(words[1]))
-		switch words[1] {
-		case "startpos":
-			tell("not yet inplemented")
-		case "fen":
-			tell("not yet implemented")
-		default:
-			tell("string pos ", words[1], "not implemented")
+	// separate the string into the current position and given move
+	cmd = trim(strings.TrimPrefix(cmd, "position"))
+	parts := strings.Split(cmd, "moves")
+	if len(cmd) == 0 || len(parts) > 2 {
+		err := fmt.Errorf("%v wrong length=%v", parts, len(parts))
+		tell("info string Error", fmt.Sprint(err))
+		return
+	}
+	alt := strings.Split(parts[0], " ")
+	alt[0] = trim(alt[0])
+	tell("info string position", alt[0], "not implemented")
+
+	if alt[0] == "startpos" { //initialize the start position
+		alt[0] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+	} else if alt[0] == "fen" {
+		alt[0] = " "
+	} else {
+		err := fmt.Errorf("%v must be %#v or %#v", alt[0], "fen", "startpos")
+		tell("info string Error", err.Error())
+		return
+	}
+	parts[0] = strings.Join(alt, " ")
+
+	//wish i could see how this part worked....
+	parts[0] = trim(parts[0])
+	fmt.Printf("info string prase %#v\n", parts[0])
+	parseFEN(parts[0])
+
+	if len(parts) == 2 {
+		parts[1] = low(trim(parts[1]))
+		fmt.Printf("info string parse %#v\n", parts[1])
+		parseMvs(parts[1])
+	}
+}
+
+func parseFEN(fen string) {
+	fenIx := 0
+	for row := 7; row >= 0; row-- {
+		for sq := row * 8; sq < row*8+8; {
+
+			char := string(fen[fenIx])
+			fenIx++
+			if char == "/" {
+				continue
+			}
+
+			if i, err := strconv.Atoi(char); err == nil {
+				fmt.Println(i, "empty from sq", sq)
+				sq += i
+				continue
+			}
+
+			fmt.Println(char, "on sq", sq)
+			sq++
 		}
+	}
+}
+
+func parseMvs(move string) {
+	mvs := strings.Split(move, " ")
+	for _, mv := range mvs {
+		fmt.Println("make move", mv)
 	}
 }
 
@@ -144,6 +207,10 @@ func handleGo(words []string) {
 	} else {
 		tell("nyi")
 	}
+}
+
+func handleDebug(words []string) {
+	tell("nyi")
 }
 
 // this function starts a go routine that reads for inputs
