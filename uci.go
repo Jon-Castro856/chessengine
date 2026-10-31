@@ -57,7 +57,8 @@ func uci(input chan string) { //this command accepts an input and executes funct
 		case "quit", "q":
 			quit = true
 			continue
-
+		default:
+			tell("info string unknown cmd", words[0])
 		}
 	}
 
@@ -103,7 +104,7 @@ func handleRegister() {
 }
 
 func handleSetOption(option []string) {
-	tell("not implemeneted", strings.Join(option, " "))
+	tell("set option not implemented")
 }
 
 func handlePosition(cmd string) {
